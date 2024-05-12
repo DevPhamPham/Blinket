@@ -1,5 +1,5 @@
-import { ScrollView, Text, View, Image, Alert} from 'react-native'
-import React, {useState} from 'react'
+import { ScrollView, Text, View, Image, Alert } from 'react-native'
+import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { images } from '../../constants'
@@ -8,8 +8,11 @@ import FormField from '../../components/FormField'
 import CustomButton from '../../components/CustomButton'
 import { Link, router } from 'expo-router'
 import { createUser } from '../../lib/appwrite'
+import { useGlobalContext } from '../../context/GlobalProvider'
+
 
 const SignUp = () => {
+  const { setUser, setIsLogged } = useGlobalContext()
   const [form, setForm] = useState({
     username: '',
     email: '',
@@ -17,8 +20,8 @@ const SignUp = () => {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const submit = async () =>{
-    if (form.username === "" || form.email === "" || form.password === ""){
+  const submit = async () => {
+    if (form.username === "" || form.email === "" || form.password === "") {
       Alert.alert('Error', 'Vui lòng nhập đầy đủ')
     }
 
@@ -26,11 +29,12 @@ const SignUp = () => {
     try {
       const result = await createUser(form.email, form.password, form.username)
 
-      // set to global state...
+      setUser(result)
+      setIsLogged(true)
 
       router.replace('/home')
     } catch (error) {
-      Alert.alert('Error',error.message)
+      Alert.alert('Error', error.message)
     } finally {
       setIsSubmitting(false);
     }
@@ -41,7 +45,7 @@ const SignUp = () => {
     <SafeAreaView className="bg-primary h-full">
       <ScrollView>
         <View className="w-full justify-center min-h-[83vh] px-4 my-6">
-          <Image 
+          <Image
             source={images.blinket_logo}
             resizeMode='contain'
             className="w-[115px] h-[50px]"
@@ -51,29 +55,29 @@ const SignUp = () => {
             Đăng ký Blinket
           </Text>
 
-          <FormField 
+          <FormField
             title="Username"
             value={form.username}
-            handleChangeText={(e) => setForm({...form, username:e})}
+            handleChangeText={(e) => setForm({ ...form, username: e })}
             otherStyles="mt-10"
           />
 
-          <FormField 
+          <FormField
             title="Email"
             value={form.email}
-            handleChangeText={(e) => setForm({...form, email:e})}
+            handleChangeText={(e) => setForm({ ...form, email: e })}
             otherStyles="mt-7"
             keyboardType="email-address"
           />
-          
-          <FormField 
+
+          <FormField
             title="Password"
             value={form.password}
-            handleChangeText={(e) => setForm({...form, password:e})}
+            handleChangeText={(e) => setForm({ ...form, password: e })}
             otherStyles="mt-7"
           />
 
-          <CustomButton 
+          <CustomButton
             title="Đăng ký"
             handlePress={submit}
             containerStyles="mt-7"
