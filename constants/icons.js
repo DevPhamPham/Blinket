@@ -11,6 +11,10 @@ import logout from "../assets/icons/logout.png";
 import eyeHide from "../assets/icons/eye-hide.png";
 import eye from "../assets/icons/eye.png";
 import play from "../assets/icons/play.png";
+import explore from "../assets/icons/explore.png";
+import flip from "../assets/icons/flip.png";
+import flash from "../assets/icons/flash.png";
+import flash_on from "../assets/icons/flash-on.png";
 
 export default {
   play,
@@ -26,4 +30,8 @@ export default {
   logout,
   eyeHide,
   eye,
+  explore,
+  flip,
+  flash,
+  flash_on
 };
