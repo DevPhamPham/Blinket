@@ -38,6 +38,14 @@
           "microphonePermission": "Allow $(Blinket) to access your microphone",
           "recordAudioAndroid": true
         }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow $(Blinket) to access your photos.",
+          "savePhotosPermission": "Allow $(Blinket) to save photos.",
+          "isAccessMediaLocationEnabled": true
+        }
       ]
     ]
   }

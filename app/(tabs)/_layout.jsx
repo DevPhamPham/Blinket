@@ -1,5 +1,7 @@
 import { Text, View, Image } from 'react-native'
 import { Tabs, Redirect } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
+
 
 import { icons } from "../../constants"
 

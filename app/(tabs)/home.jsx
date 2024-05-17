@@ -1,8 +1,9 @@
-import { Camera } from 'expo-camera';
-import { useState, useRef, useEffect } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View, Image, Alert, SafeAreaView, useWindowDimensions } from 'react-native';
+import { Camera, CameraType  } from 'expo-camera';
+import React, { useState, useRef, useEffect } from 'react';
+import { Button, FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View, Image, Alert, SafeAreaView, useWindowDimensions, RefreshControl } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Video, ResizeMode } from 'expo-av'
+import { useIsFocused , useRoute  } from '@react-navigation/native';
 
 
 import { shareAsync } from 'expo-sharing';
@@ -23,13 +24,44 @@ const Home = () => {
   const [capturedPhoto, setCapturedPhoto] = useState(null);
   const [isCapturing, setIsCapturing] = useState(false);
 
-  let cameraRef = useRef();
+  const isFocused = useIsFocused();
+  const cameraRef = useRef(null);
+  const [cameraReady, setCameraReady] = useState(false); 
+
   const [hasCameraPermission, setHasCameraPermission] = Camera.useCameraPermissions();
   const [hasMicrophonePermission, setHasMicrophonePermission] = Camera.useMicrophonePermissions();
   const [hasMediaLibraryPermission, requestPermission] = MediaLibrary.usePermissions();
   const [isRecording, setIsRecording] = useState(false);
   const [video, setVideo] = useState(null);
   const [albums, setAlbums] = useState(null);
+
+  const [isLongPress, setIsLongPress] = useState(false);
+  const pressTimeoutRef = useRef(null);
+
+  const [refreshing, setRefreshing] = useState(false);
+
+
+  useEffect(() => {
+    let isMounted = true;
+    
+    const startCamera = async () => {
+      const { status } = await Camera.requestCameraPermissionsAsync();
+      if (isMounted && status === 'granted') {
+        setHasCameraPermission(true);
+        setCameraReady(true); // Set to true when camera is ready
+      }
+    };
+
+    if (isFocused) {
+      startCamera();
+    }
+
+    return () => {
+      isMounted = false;
+      setCameraReady(false); // Reset when the tab is not focused
+    };
+  }, [isFocused]);
+
 
   if (!hasCameraPermission || !hasMicrophonePermission) {
     // Camera permissions are still loading
@@ -55,6 +87,17 @@ const Home = () => {
     );
   }
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await setHasCameraPermission();
+    await setHasMicrophonePermission();
+    setIsCapturing(false);
+    setIsRecording(false);
+    setVideo(null);
+    setCapturedPhoto(null);
+    setRefreshing(false);
+  };
+
   async function getAlbums() {
     if (hasMediaLibraryPermission.status !== 'granted') {
       await requestPermission();
@@ -76,11 +119,11 @@ const Home = () => {
 
 
   async function takePicture() {
-    if (cameraRef.current && !isCapturing) {
+    if (cameraRef.current && !isCapturing && !isLongPress) {
       setIsCapturing(true);
       const photo = await cameraRef.current.takePictureAsync({
         quality: 1,
-        // skipProcessing: true,
+        skipProcessing: true,
         flash: flash === 'on' ? flash.on : flash.off, // Sử dụng giá trị FlashMode từ Camera.Constants
       });
       setCapturedPhoto(photo);
@@ -95,10 +138,11 @@ const Home = () => {
   let recordVideo = async () => {
     setIsRecording(true);
     let options = {
-      quality: "1080p",
-      maxDuration: 5,
+      quality: "4:3",
+      maxDuration: 4,
       mute: false,
-      maxFileSize: 10 * 1024 * 1024
+      maxFileSize: 10 * 1024 * 1024,
+      flash: flash === 'on' ? flash.on : flash.off, // Sử dụng giá trị FlashMode từ Camera.Constants
     };
 
     await cameraRef.current.recordAsync(options).then((recordedVideo) => {
@@ -110,24 +154,54 @@ const Home = () => {
     setIsRecording(false);
     cameraRef.current.stopRecording();
   };
-
   function reRecording() {
     setVideo(null);
   }
 
+  function handlePressIn() {
+    setIsLongPress(false);
+    pressTimeoutRef.current = setTimeout(() => {
+      setIsLongPress(true);
+      recordVideo();
+    }, 500); // Adjust the delay as needed
+  }
+
+  function handlePressOut() {
+    if (pressTimeoutRef.current) {
+      clearTimeout(pressTimeoutRef.current);
+    }
+    if (isLongPress) {
+      stopRecording();
+    } else {
+      takePicture();
+    }
+  }
+
+
+  let shareVideo = () => {
+    shareAsync(video.uri).then(() => {
+      setVideo(undefined);
+    });
+  };
+
+  let saveVideo = async () => {
+    if (hasMediaLibraryPermission.status !== 'granted') {
+      await requestPermission();
+    }
+    await MediaLibrary.saveToLibraryAsync(video.uri).then(() => {
+      setVideo(undefined);
+    });
+  };
+  let savePicture = async () => {
+    if (hasMediaLibraryPermission.status !== 'granted') {
+      await requestPermission();
+    }
+    await MediaLibrary.saveToLibraryAsync(capturedPhoto.uri).then(() => {
+      setCapturedPhoto(undefined);
+    });
+  };
+
   // if (video) {
-  //   let shareVideo = () => {
-  //     shareAsync(video.uri).then(() => {
-  //       setVideo(undefined);
-  //     });
-  //   };
-
-  //   let saveVideo = () => {
-  //     MediaLibrary.saveToLibraryAsync(video.uri).then(() => {
-  //       setVideo(undefined);
-  //     });
-  //   };
-
   //   return (
   //     <SafeAreaView style={styles.container}>
   //       <Video
@@ -146,11 +220,24 @@ const Home = () => {
 
   return (
     <SafeAreaView className="bg-primary">
+      {/* <ScrollView className="w-full h-full"
+
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#9Bd35A', '#689F38']}
+          />
+        }
+      > */}
+
+
+
       <View className="w-full justify-center h-full">
-        {!video && ( // Chỉ hiển thị CameraView khi chưa có ảnh chụp
+        {(!capturedPhoto && hasCameraPermission && cameraReady) && ( // Chỉ hiển thị CameraView khi chưa có ảnh chụp
           <View>
             <View className="rounded-xl border-2 border-yellow-500 overflow-hidden">
-              <Camera ref={cameraRef}  style={{ width: width, height: width }} whiteBalance={"auto"} autoFocus flashMode={flash} type={facing} ratio='1:1'>
+              <Camera ref={cameraRef} style={{ width: width, height: width * 4 / 3 }}  whiteBalance={"auto"} autoFocus flashMode={flash} type={facing} ratio='4:3'>
               </Camera>
             </View>
 
@@ -167,9 +254,8 @@ const Home = () => {
               <TouchableOpacity
                 style={[styles.captureButton, isRecording && styles.disabledButton]} // Disable khi đang chụp
                 disabled={isRecording} // Vô hiệu hóa nút khi đang chụp ảnh
-                onPress={takePicture}
-                onPressIn={recordVideo}
-                onPressOut={stopRecording}
+                onPressIn={handlePressIn}
+                onPressOut={handlePressOut}
               >
                 <Image
                   source={icons.camera} // Chỉ sử dụng icon camera
@@ -189,48 +275,110 @@ const Home = () => {
           </View>
         )}
 
-        {/* {capturedPhoto && (
-        <View style={styles.previewContainer}>
-          <Image source={{ uri: capturedPhoto.uri }} style={styles.previewImage} />
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={retakePicture}
-          >
-            <Text style={styles.closeButtonText}>X</Text>
-          </TouchableOpacity>
-        </View>
-      )} */}
 
-
-        {video && (
+        {(video || capturedPhoto) && (
           <View style={styles.previewContainer}>
-            {/* <Image source={{ uri: capturedPhoto.uri }} style={styles.previewImage} /> */}
+            {(capturedPhoto &&
+              <View className="w-full justify-center h-full">
+                <View className="rounded-xl border-2 border-yellow-500 overflow-hidden">
+                  <Image source={{ uri: capturedPhoto.uri }} style={{ width: width, height: width * 4 / 3 }} />
+                </View>
+                {/* <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={retakePicture}
+                >
+                  <Text style={styles.closeButtonText}>X</Text>
+                </TouchableOpacity> */}
 
-            <Video
-              source={{ uri: video.uri }}
-              className="rounded-xl"
-              style={{ width: width, height: width }}
-              resizeMode={ResizeMode.COVER}
-              useNativeControls
-              shouldPlay
-            // onPlaybackStatusUpdate={(status) => {
-            //   if (status.didJustFinish) {
-            //     setPlay(false);
-            //   }
-            // }}
-            />
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity onPress={retakePicture}>
+                    <Text style={styles.closeButtonText}>X</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.sendButton, isCapturing]} // Disable khi đang chụp
+                    disabled={isCapturing} // Vô hiệu hóa nút khi đang chụp ảnh
+                  // onPress={}
+                  // onPressIn={recordVideo}
+                  // onPressOut={stopRecording}
+                  >
+                    <Image
+                      source={icons.send} // Chỉ sử dụng icon send
+                      resizeMode="contain"
+                      style={styles.iconSend}
+                    />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={savePicture}>
+                    <Image
+                      source={icons.share}
+                      resizeMode="contain"
+                      style={[styles.icon, styles.rotatedIcon]}
+                    />
+                  </TouchableOpacity>
+                </View>
 
 
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={reRecording}
-            >
-              <Text style={styles.closeButtonText}>X</Text>
-            </TouchableOpacity>
+              </View>
+            )}
+
+            {video &&
+              (
+                <View className="w-full justify-center h-full bg-primary">
+                  <Video
+                    source={{ uri: video.uri }}
+                    className="rounded-xl"
+                    style={{ width: width, height: width * 4 / 3 }}
+                    resizeMode={ResizeMode.COVER}
+                    useNativeControls
+                    shouldPlay
+                    isLooping
+                  // onPlaybackStatusUpdate={(status) => {
+                  //   if (status.didJustFinish) {
+                  //     setPlay(false);
+                  //   }
+                  // }}
+                  />
+
+
+                  <View style={styles.buttonContainer}>
+                    <TouchableOpacity onPress={reRecording}>
+                      <Text style={styles.closeButtonText}>X</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.sendButton, isCapturing]} // Disable khi đang chụp
+                      disabled={isCapturing} // Vô hiệu hóa nút khi đang chụp ảnh
+                    // onPress={}
+                    // onPressIn={recordVideo}
+                    // onPressOut={stopRecording}
+                    >
+                      <Image
+                        source={icons.send} // Chỉ sử dụng icon send
+                        resizeMode="contain"
+                        style={styles.iconSend}
+                      />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={saveVideo}>
+                      <Image
+                        source={icons.share}
+                        resizeMode="contain"
+                        style={[styles.icon, styles.rotatedIcon]}
+                      />
+                    </TouchableOpacity>
+                  </View>
+
+
+
+                </View>
+              )}
           </View>
         )}
-
       </View>
+
+      {/* </ScrollView> */}
+
     </SafeAreaView>
 
   );
@@ -269,9 +417,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   closeButtonText: {
-    color: 'black',
+    color: 'white',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 20,
+    width: 24,
+    height: 24,
   },
   buttonContainer: {
     // position: 'absolute',
@@ -292,10 +442,18 @@ const styles = StyleSheet.create({
     opacity: 0.5, // Giảm độ mờ khi nút bị vô hiệu hóa
   },
   captureButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 80,
+    height: 80,
+    borderRadius: 50,
     backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sendButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 50,
+    backgroundColor: 'grey',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -316,5 +474,15 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     tintColor: 'white',
+  },
+  iconSend: {
+    width: 35,
+    height: 35,
+    alignItems: 'center',
+    alignContent: "center",
+    tintColor: 'white',
+  },
+  rotatedIcon: {
+    transform: [{ rotate: '180deg' }],
   },
 });

@@ -15,6 +15,8 @@ import explore from "../assets/icons/explore.png";
 import flip from "../assets/icons/flip.png";
 import flash from "../assets/icons/flash.png";
 import flash_on from "../assets/icons/flash-on.png";
+import send from "../assets/icons/send.png";
+import share from "../assets/icons/share.png";
 
 export default {
   play,
@@ -33,5 +35,7 @@ export default {
   explore,
   flip,
   flash,
-  flash_on
+  flash_on,
+  send,
+  share
 };
