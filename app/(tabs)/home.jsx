@@ -1,21 +1,68 @@
-import { Camera, CameraType  } from 'expo-camera';
+import { router } from "expo-router";
+
+import FormField from "../../components/FormFieldUpload"
+import { icons } from "../../constants";
+import { createVideoPost } from "../../lib/appwrite";
+
+import { Camera } from 'expo-camera';
 import React, { useState, useRef, useEffect } from 'react';
-import { Button, FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View, Image, Alert, SafeAreaView, useWindowDimensions, RefreshControl } from 'react-native';
-import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import { Button, ScrollView, StyleSheet, Text, TouchableOpacity, View, Image, Alert, SafeAreaView, useWindowDimensions, RefreshControl } from 'react-native';
 import { Video, ResizeMode } from 'expo-av'
-import { useIsFocused , useRoute  } from '@react-navigation/native';
+import { useIsFocused } from '@react-navigation/native';
 
 
 import { shareAsync } from 'expo-sharing';
 import * as MediaLibrary from 'expo-media-library';
+import * as FileSystem from 'expo-file-system';
 
-import { icons } from "../../constants";
-import VideoCard from '../../components/VideoCard'
+import { useGlobalContext } from "../../context/GlobalProvider";
 
-const MAX_RECORDING_DURATION = 5; // Giới hạn thời gian quay 5 giây
+const MAX_RECORDING_DURATION = 4; // Giới hạn thời gian quay 5 giây
 
 const Home = () => {
+  const { user } = useGlobalContext();
   const { width } = useWindowDimensions();
+  const [uploading, setUploading] = useState(false);
+  const [form, setForm] = useState({
+    title: "",
+    video: null,
+    thumbnail: {"name": "test.jpg", "size": 120000, "type": "image/jpeg", "uri": "https://picsum.photos/400/300"}, //"https://picsum.photos/400/300"
+    prompt: "My promt...",
+  });
+
+  const submit = async () => {
+    if (
+      (form.prompt === "") |
+      (form.title === "") |
+      // !form.thumbnail |
+      !form.video
+    ) {
+      return Alert.alert("Please provide all fields");
+    }
+
+    setUploading(true);
+    try {
+      await createVideoPost({
+        ...form,
+        userId: user.$id,
+      });
+
+      Alert.alert("Success", "Post uploaded successfully");
+      reRecording();
+      router.push("/explore");
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setForm({
+        title: "",
+        video: null,
+        thumbnail: {"name": "thumbnail_random_picscum.jpg", "size": 174000, "type": "image/jpeg", "uri": "https://picsum.photos/400/300"},
+        prompt: "My promt...",
+      });
+
+      setUploading(false);
+    }
+  };
 
 
   const [facing, setFacing] = useState('back');
@@ -26,7 +73,7 @@ const Home = () => {
 
   const isFocused = useIsFocused();
   const cameraRef = useRef(null);
-  const [cameraReady, setCameraReady] = useState(false); 
+  const [cameraReady, setCameraReady] = useState(false);
 
   const [hasCameraPermission, setHasCameraPermission] = Camera.useCameraPermissions();
   const [hasMicrophonePermission, setHasMicrophonePermission] = Camera.useMicrophonePermissions();
@@ -43,7 +90,7 @@ const Home = () => {
 
   useEffect(() => {
     let isMounted = true;
-    
+
     const startCamera = async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
       if (isMounted && status === 'granted') {
@@ -139,16 +186,49 @@ const Home = () => {
     setIsRecording(true);
     let options = {
       quality: "4:3",
-      maxDuration: 4,
+      maxDuration: MAX_RECORDING_DURATION,
       mute: false,
-      maxFileSize: 10 * 1024 * 1024,
+      maxFileSize: 5 * 1024 * 1024,
       flash: flash === 'on' ? flash.on : flash.off, // Sử dụng giá trị FlashMode từ Camera.Constants
     };
 
-    await cameraRef.current.recordAsync(options).then((recordedVideo) => {
+    // await Image.getSize(form.thumbnail, (width, height) => {
+    //   console.log("Thumbnail Width:", width);
+    //   console.log("Thumbnail Height:", height);
+    //   form.thumbnail["size"] = width *height
+    //   form.thumbnail["mimeType"] = "image/jpeg"
+    
+    //   // You can now use width and height in your component
+    // }, (error) => {
+    //   console.error("Error loading thumbnail:", error);
+    // });
+
+    await cameraRef.current.recordAsync(options).then(async (recordedVideo) => {
       setVideo(recordedVideo);
+
+      const fileInfo = await FileSystem.getInfoAsync(recordedVideo.uri);
+      // Determine MIME type (this is an approximation)
+      const fileExtension = recordedVideo.uri.split('.').pop();
+      const fileName = recordedVideo.uri.split('/').pop();
+      const mimeType = `video/${fileExtension}`;
+      recordedVideo["size"] = fileInfo.size
+      recordedVideo["name"] = fileName
+      recordedVideo["mimeType"] = mimeType
+
+
+      // console.log("File Size:", fileInfo.size);
+      // console.log("MIME Type:", mimeType);
+      // console.log("File name:", fileName);
+      form.video = recordedVideo
+      setForm({
+        ...form,
+        video: recordedVideo,
+      });
+      console.log(form);
       setIsRecording(false);
     });
+
+
   };
   let stopRecording = () => {
     setIsRecording(false);
@@ -237,7 +317,7 @@ const Home = () => {
         {(!capturedPhoto && hasCameraPermission && cameraReady) && ( // Chỉ hiển thị CameraView khi chưa có ảnh chụp
           <View>
             <View className="rounded-xl border-2 border-yellow-500 overflow-hidden">
-              <Camera ref={cameraRef} style={{ width: width, height: width * 4 / 3 }}  whiteBalance={"auto"} autoFocus flashMode={flash} type={facing} ratio='4:3'>
+              <Camera ref={cameraRef} style={{ width: width, height: width * 4 / 3 }} whiteBalance={"auto"} autoFocus flashMode={flash} type={facing} ratio='4:3'>
               </Camera>
             </View>
 
@@ -325,21 +405,30 @@ const Home = () => {
             {video &&
               (
                 <View className="w-full justify-center h-full bg-primary">
-                  <Video
-                    source={{ uri: video.uri }}
-                    className="rounded-xl"
-                    style={{ width: width, height: width * 4 / 3 }}
-                    resizeMode={ResizeMode.COVER}
-                    useNativeControls
-                    shouldPlay
-                    isLooping
-                  // onPlaybackStatusUpdate={(status) => {
-                  //   if (status.didJustFinish) {
-                  //     setPlay(false);
-                  //   }
-                  // }}
-                  />
+                  <View>
+                    <Video
+                      source={{ uri: video.uri }}
+                      className="rounded-xl border-2 border-yellow-600"
+                      style={{ width: width, height: width * 4 / 3 }}
+                      resizeMode={ResizeMode.COVER}
+                      useNativeControls
+                      shouldPlay
+                      isLooping
+                    // onPlaybackStatusUpdate={(status) => {
+                    //   if (status.didJustFinish) {
+                    //     setPlay(false);
+                    //   }
+                    // }}
+                    />
 
+                    <FormField
+                      title=""
+                      value={form.title}
+                      placeholder="Đặt tiêu đề hấp dẫn cho video của bạn..."
+                      handleChangeText={(e) => setForm({ ...form, title: e })}
+                      otherStyles="absolute left-0 right-0 bottom-0"
+                    />
+                  </View>
 
                   <View style={styles.buttonContainer}>
                     <TouchableOpacity onPress={reRecording}>
@@ -347,9 +436,8 @@ const Home = () => {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={[styles.sendButton, isCapturing]} // Disable khi đang chụp
-                      disabled={isCapturing} // Vô hiệu hóa nút khi đang chụp ảnh
-                    // onPress={}
+                      style={[styles.sendButton, isRecording]} // Disable khi đang chụp
+                      onPress={submit}
                     // onPressIn={recordVideo}
                     // onPressOut={stopRecording}
                     >
@@ -486,3 +574,5 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '180deg' }],
   },
 });
+
+

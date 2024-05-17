@@ -44,6 +44,7 @@ const TrendingItem = ({ activeItem, item }) => {
           resizeMode={ResizeMode.CONTAIN}
           useNativeControls
           shouldPlay
+          isLooping
           onPlaybackStatusUpdate={(status) => {
             if (status.didJustFinish) {
               setPlay(false);

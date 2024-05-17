@@ -43,11 +43,11 @@ const VideoCard = ({ title, creator, avatar, thumbnail, video }) => {
           useNativeControls
           shouldPlay
           isLooping
-          // onPlaybackStatusUpdate={(status) => {
-          //   if (status.didJustFinish) {
-          //     setPlay(false);
-          //   }
-          // }}
+          onPlaybackStatusUpdate={(status) => {
+            if (status.didJustFinish) {
+              setPlay(false);
+            }
+          }}
         />
       ) : <TouchableOpacity
         activeOpacity={0.7}
