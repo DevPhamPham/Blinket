@@ -8,7 +8,7 @@ import FormField from '../../components/FormField'
 import CustomButton from '../../components/CustomButton'
 import { Link, router } from 'expo-router'
 
-import {getCurrentUser, signIn } from '../../lib/appwrite'
+import {getCurrentUser, signIn } from '../../service/appwrite'
 import { useGlobalContext } from '../../context/GlobalProvider'
 
 const SignIn = () => {
@@ -43,7 +43,7 @@ const SignIn = () => {
 
 
   return (
-    <SafeAreaView className="bg-primary h-full">
+    <SafeAreaView className="bg-black h-full">
       <ScrollView>
         <View className="w-full justify-center min-h-[83vh] px-4 my-6">
           <Image
@@ -52,7 +52,7 @@ const SignIn = () => {
             className="w-[115px] h-[50px]"
           />
 
-          <Text className="text-2xl text-white text-semiboldb mt-10 font-psemibold">
+          <Text className="text-2xl text-white text-semiboldb mt-10 font-pmedium">
             Đăng nhập vào Blinket
           </Text>
 
@@ -74,7 +74,7 @@ const SignIn = () => {
           <CustomButton
             title="Đăng nhập"
             handlePress={submit}
-            containerStyles="mt-7"
+            containerStyles="mt-7 bg-primary-300 text-black"
             isLoading={isSubmitting}
           />
 
@@ -82,7 +82,7 @@ const SignIn = () => {
             <Text className="text-lg text-gray-100 font-pregular">
               Chưa có tài khoản?
             </Text>
-            <Link href="/sign-up" className="text-lg font-psemibold text-secondary">Đăng ký ngay</Link>
+            <Link href="/sign-up" className="text-lg font-pmedium text-primary-300">Đăng ký ngay</Link>
           </View>
         </View>
       </ScrollView>

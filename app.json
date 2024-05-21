@@ -17,14 +17,25 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "package": "com.blinket.blinket"
+      "package": "com.blinket.blinket",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Allow $(Blinket) to access your photos.",
+        "NSPhotoLibraryAddUsageDescription": "Allow $(Blinket) to save photos."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.blinket.blinket"
+      "package": "com.blinket.blinket",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_MEDIA_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -47,6 +58,14 @@
           "isAccessMediaLocationEnabled": true
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "d8632def-592e-4c3f-8abe-a4f746c7520c"
+      }
+    }
   }
 }

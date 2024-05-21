@@ -1,9 +1,9 @@
-import { FlatList, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native'
-import React from 'react'
+import { FlatList, StyleSheet, Text, TouchableOpacity, RefreshControl, View, Image } from 'react-native'
+import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import EmptyState from '../../components/EmptyState'
-import { getUserPosts, signOut } from '../../lib/appwrite'
-import useAppwrite from '../../lib/useAppwrite'
+import { getUserPosts, signOut } from '../../service/appwrite'
+import useAppwrite from '../../service/useAppwrite'
 import VideoCard from '../../components/VideoCard'
 import { useGlobalContext } from '../../context/GlobalProvider'
 import { icons } from '../../constants'
@@ -13,6 +13,19 @@ import { router } from 'expo-router'
 const Profile = () => {
   const { setIsLogged, user, setUser } = useGlobalContext()
   const { data: posts, refetch } = useAppwrite(() => getUserPosts(user.$id))
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
+
+  const handleDeleteImageChange = (value) => {
+    if (value) onRefresh();
+  };
+
+
 
   const logout = async () => {
     await signOut();
@@ -23,7 +36,7 @@ const Profile = () => {
   };
 
   return (
-    <SafeAreaView className="bg-primary h-full">
+    <SafeAreaView className="bg-black-100 h-full">
       <FlatList
         data={posts}
         keyExtractor={(item) => item.$id}
@@ -34,6 +47,10 @@ const Profile = () => {
             video={item.video}
             creator={item.creator.username}
             avatar={item.creator.avatar}
+            fromUser={true}
+            docId ={item.$id}
+            time={item.$createdAt}
+            onDeleteImageChange={handleDeleteImageChange}
           />
         )}
         ListHeaderComponent={() => (
@@ -85,6 +102,10 @@ const Profile = () => {
           />
         )}
 
+        refreshControl={<RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+        />}
       />
     </SafeAreaView>
   )

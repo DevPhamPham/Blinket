@@ -134,7 +134,22 @@ export const getAllPosts = async () => {
   try {
     const posts = await databases.listDocuments(
       databaseId,
-      videoCollectionId
+      videoCollectionId,
+      [Query.orderDesc("$createdAt")]
+    )
+
+    return posts.documents;
+  } catch (error) {
+    throw new Error(error);
+  }
+}
+
+export const getAllImage = async () => {
+  try {
+    const posts = await databases.listDocuments(
+      databaseId,
+      imageCollectionId,
+      [Query.orderDesc("$createdAt")]
     )
 
     return posts.documents;
@@ -192,7 +207,7 @@ export async function uploadFile(file, type) {
   const { mimeType, ...rest } = file;
   const asset = { type: mimeType, ...rest };
 
-  console.log("ASSET: ",asset)
+  console.log("ASSET: ", asset)
 
   try {
     const uploadedFile = await storage.createFile(
@@ -201,9 +216,9 @@ export async function uploadFile(file, type) {
       asset
     );
 
-    console.log("UPLOADED: ",uploadedFile)
+    console.log("UPLOADED: ", uploadedFile)
 
-    const fileUrl = await getFilePreview(uploadedFile.$id, type);
+    const fileUrl = await getFilePreview(uploadedFile.$id, type,file.width,file.height);
     return fileUrl;
   } catch (error) {
     throw new Error(error);
@@ -211,18 +226,20 @@ export async function uploadFile(file, type) {
 }
 
 // Get File Preview
-export async function getFilePreview(fileId, type) {
+export async function getFilePreview(fileId, type,width,height) {
   let fileUrl;
 
   try {
     if (type === "video") {
       fileUrl = storage.getFileView(config.storageId, fileId);
     } else if (type === "image") {
+      const widthImage = width??3000
+      const heightImage = height??4000
       fileUrl = storage.getFilePreview(
         config.storageId,
         fileId,
-        2000,
-        2000,
+        widthImage,
+        heightImage,
         "top",
         100
       );
@@ -231,6 +248,8 @@ export async function getFilePreview(fileId, type) {
     }
 
     if (!fileUrl) throw Error;
+
+    console.log("fileUrl: ", fileUrl);
 
     return fileUrl;
   } catch (error) {
@@ -264,3 +283,81 @@ export async function createVideoPost(form) {
     throw new Error(error);
   }
 }
+
+// Create Video Post
+export async function createImagePost(form) {
+  try {
+    const imageUrl = await uploadFile(form.image, "image");
+
+    console.log("imageUrl: ", imageUrl);
+
+    const newPost = await databases.createDocument(
+      config.databaseId,
+      config.imageCollectionId,
+      ID.unique(),
+      {
+        title: form.title,
+        image: imageUrl,
+        creator: form.userId,
+      }
+    );
+
+    return newPost;
+  } catch (error) {
+    throw new Error(error);
+  }
+}
+
+// Delete File
+export async function deleteFile(data) {
+
+  try {
+    Promise.all([
+      await storage.deleteFile(
+        data.bucketIdThumbnail, // bucketId
+        data.fileIdThumbnail // fileId
+      ),
+      await storage.deleteFile(
+        data.bucketIdVideo, // bucketId
+        data.fileIdVideo // fileId
+      )
+    ])
+
+  } catch (error) {
+    throw new Error(error);
+  }
+}
+
+export async function deletePost(data) {
+  const docId = data["docId"];
+
+  try {
+    // Xóa tài liệu thay vì lấy tài liệu
+    const result = await databases.getDocument(
+      config.databaseId,
+      config.videoCollectionId,
+      docId // documentId
+    );
+
+    bucketIdThumbnail = result["thumbnail"].split("/buckets/")[1].split('/')[0]
+    fileIdThumbnail = result["thumbnail"].split("/files/")[1].split('/')[0]
+    bucketIdVideo = result["video"].split("/buckets/")[1].split('/')[0]
+    fileIdVideo = result["video"].split("/files/")[1].split('/')[0]
+    await deleteFile({
+      bucketIdThumbnail,
+      fileIdThumbnail,
+      bucketIdVideo,
+      fileIdVideo
+    });
+
+    await databases.deleteDocument(
+      config.databaseId,
+      config.videoCollectionId,
+      docId // documentId
+    );
+  } catch (error) {
+    console.error("Error deleting document:", error);
+    throw error; // Ném lại lỗi để xử lý ở hàm gọi
+  }
+}
+

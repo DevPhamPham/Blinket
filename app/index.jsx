@@ -14,12 +14,12 @@ export default function App() {
   if(!loading && isLogged) return <Redirect href="/home"/>
 
   return (
-    <SafeAreaView className="bg-primary h-full">
+    <SafeAreaView className="bg-black-100 h-full">
       <ScrollView contentContainerStyle={{ height: '100%' }}>
         <View className="w-full items-center justify-center min-h-[85vh] px-4">
           <Image
             source={images.blinket_logo}
-            className="w-[130px] h-[84px]"
+            className="w-[200px]"
             resizeMode="contain"
           />
 
@@ -30,12 +30,12 @@ export default function App() {
           />
           <View className="relative mt-5">
             <Text className="text-3xl font-bold text-center text-white">Khám phá khả năng vô tận với {' '}
-              <Text className="text-secondary-200">Blinket</Text>
+              <Text className="text-primary-200">Blinket</Text>
             </Text>
 
             <Image
               source={images.path}
-              className="w-[136px] h-[15px] absolute -bottom-1 -right-0"
+              className="w-[136px] h-[15px] absolute -bottom-0 -right-0 rotate-180"
               resizeMode="contain"
             />
           </View>
@@ -48,7 +48,7 @@ export default function App() {
           <CustomButton 
             title="Bắt đầu với Email"
             handlePress={() => router.push('/sign-in')}
-            containerStyles="w-full mt-7"
+            containerStyles="w-full mt-7 bg-primary-300 text-black"
           />
         </View>
       </ScrollView>

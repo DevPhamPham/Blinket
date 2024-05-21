@@ -2,7 +2,7 @@ import { router } from "expo-router";
 
 import FormField from "../../components/FormFieldUpload"
 import { icons } from "../../constants";
-import { createVideoPost } from "../../lib/appwrite";
+import { createVideoPost, createImagePost} from "../../service/appwrite";
 
 import { Camera } from 'expo-camera';
 import React, { useState, useRef, useEffect } from 'react';
@@ -28,6 +28,11 @@ const Home = () => {
     video: null,
     thumbnail: {"name": "test.jpg", "size": 120000, "type": "image/jpeg", "uri": "https://picsum.photos/400/300"}, //"https://picsum.photos/400/300"
     prompt: "My promt...",
+  });
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [formImage, setFormImage] = useState({
+    title: "",
+    image: null
   });
 
   const submit = async () => {
@@ -63,7 +68,35 @@ const Home = () => {
       setUploading(false);
     }
   };
+  const submitImage = async () => {
+    if (
+      (formImage.title === "") |
+      !formImage.image
+    ) {
+      return Alert.alert("Vui lòng nhập nội dung");
+    }
 
+    setUploadingImage(true);
+    try {
+      await createImagePost({
+        ...formImage,
+        userId: user.$id,
+      });
+
+      Alert.alert("Success", "Post uploaded successfully");
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setFormImage({
+        title: "",
+        video: null,
+      });
+
+      setUploadingImage(false);
+      retakePicture();
+      // router.push("/explore");
+    }
+  };
 
   const [facing, setFacing] = useState('back');
   const [flash, setFlash] = useState("off");
@@ -173,7 +206,19 @@ const Home = () => {
         skipProcessing: true,
         flash: flash === 'on' ? flash.on : flash.off, // Sử dụng giá trị FlashMode từ Camera.Constants
       });
+      const fileInfo = await FileSystem.getInfoAsync(photo.uri);
+      const fileName = photo.uri.split('/').pop();
+      const mimeType = `image/jpeg`;
+      photo["size"] = fileInfo.size
+      photo["name"] = fileName
+      photo["type"] = mimeType
+      // console.log("Captured photo: ",photo);
       setCapturedPhoto(photo);
+      formImage.image = photo
+      setFormImage({
+        ...formImage,
+        image: photo,
+      });
       setIsCapturing(false);
     }
   }
@@ -299,7 +344,7 @@ const Home = () => {
   // }
 
   return (
-    <SafeAreaView className="bg-primary">
+    <SafeAreaView className="bg-black-100">
       {/* <ScrollView className="w-full h-full"
 
         refreshControl={
@@ -361,14 +406,20 @@ const Home = () => {
             {(capturedPhoto &&
               <View className="w-full justify-center h-full">
                 <View className="rounded-xl border-2 border-yellow-500 overflow-hidden">
+                  <View>
                   <Image source={{ uri: capturedPhoto.uri }} style={{ width: width, height: width * 4 / 3 }} />
+
+                    <FormField
+                      title=""
+                      value={formImage.title}
+                      placeholder="Đặt tiêu đề hấp dẫn cho ảnh của bạn..."
+                      handleChangeText={(e) => setFormImage({ ...formImage, title: e })}
+                      otherStyles="absolute left-1 right-1 bottom-0"
+                    />
+                  </View>
+
+
                 </View>
-                {/* <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={retakePicture}
-                >
-                  <Text style={styles.closeButtonText}>X</Text>
-                </TouchableOpacity> */}
 
                 <View style={styles.buttonContainer}>
                   <TouchableOpacity onPress={retakePicture}>
@@ -378,7 +429,7 @@ const Home = () => {
                   <TouchableOpacity
                     style={[styles.sendButton, isCapturing]} // Disable khi đang chụp
                     disabled={isCapturing} // Vô hiệu hóa nút khi đang chụp ảnh
-                  // onPress={}
+                    onPress={submitImage}
                   // onPressIn={recordVideo}
                   // onPressOut={stopRecording}
                   >
@@ -426,7 +477,7 @@ const Home = () => {
                       value={form.title}
                       placeholder="Đặt tiêu đề hấp dẫn cho video của bạn..."
                       handleChangeText={(e) => setForm({ ...form, title: e })}
-                      otherStyles="absolute left-0 right-0 bottom-0"
+                      otherStyles="absolute left-1 right-1 bottom-0"
                     />
                   </View>
 

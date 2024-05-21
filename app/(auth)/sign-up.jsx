@@ -7,7 +7,7 @@ import { images } from '../../constants'
 import FormField from '../../components/FormField'
 import CustomButton from '../../components/CustomButton'
 import { Link, router } from 'expo-router'
-import { createUser } from '../../lib/appwrite'
+import { createUser } from '../../service/appwrite'
 import { useGlobalContext } from '../../context/GlobalProvider'
 
 
@@ -42,7 +42,7 @@ const SignUp = () => {
 
 
   return (
-    <SafeAreaView className="bg-primary h-full">
+    <SafeAreaView className="bg-black h-full">
       <ScrollView>
         <View className="w-full justify-center min-h-[83vh] px-4 my-6">
           <Image
@@ -80,7 +80,7 @@ const SignUp = () => {
           <CustomButton
             title="Đăng ký"
             handlePress={submit}
-            containerStyles="mt-7"
+            containerStyles="mt-7 bg-primary-300 text-black"
             isLoading={isSubmitting}
           />
 
@@ -88,7 +88,7 @@ const SignUp = () => {
             <Text className="text-lg text-gray-100 font-pregular">
               Bạn đã có tài khoản?
             </Text>
-            <Link href="/sign-in" className="text-lg font-psemibold text-secondary">Đăng nhập</Link>
+            <Link href="/sign-in" className="text-lg font-pmedium text-primary-300">Đăng nhập</Link>
           </View>
         </View>
       </ScrollView>

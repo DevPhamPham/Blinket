@@ -3,39 +3,42 @@ import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { images } from '../../constants'
 import SearchInput from '../../components/SearchInput'
-import Trending from '../../components/Trending'
+import ImageCard from '../../components/ImageCard'
 import EmptyState from '../../components/EmptyState'
-import { getAllPosts, getLastestPosts } from '../../lib/appwrite'
-import useAppwrite from '../../lib/useAppwrite'
+import { getAllImage, getAllPosts, getLastestPosts } from '../../service/appwrite'
+import useAppwrite from '../../service/useAppwrite'
 import VideoCard from '../../components/VideoCard'
-import {useGlobalContext} from '../../context/GlobalProvider'
+import { useGlobalContext } from '../../context/GlobalProvider'
 
 const Explore = () => {
   const { setIsLogged, user, setUser } = useGlobalContext()
-  const {data: posts, refetch} = useAppwrite(getAllPosts)
-  const {data: lastestPosts} = useAppwrite(getLastestPosts)
+  const { data: posts, refetch } = useAppwrite(getAllPosts)
+  const { data: imagesData, refetch: refetchImage } = useAppwrite(getAllImage)
+  const { data: lastestPosts } = useAppwrite(getLastestPosts)
 
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
     setRefreshing(true);
     await refetch();
+    await refetchImage();
     setRefreshing(false);
   };
 
 
   return (
-    <SafeAreaView className="bg-primary">
+    <SafeAreaView className="bg-black-100">
       <FlatList
         data={posts}
         keyExtractor={(item) => item.$id}
         renderItem={({ item }) => (
-          <VideoCard 
-          title={item.title}
-          thumbnail={item.thumbnail}
-          video={item.video}
-          creator={item.creator.username}
-          avatar={item.creator.avatar}
+          <VideoCard
+            title={item.title}
+            thumbnail={item.thumbnail}
+            video={item.video}
+            creator={item.creator.username}
+            avatar={item.creator.avatar}
+            time={item.$createdAt}
           />
         )}
         ListHeaderComponent={() => (
@@ -62,11 +65,16 @@ const Explore = () => {
 
             <View className="w-full flex-1 pt-5 pb-8">
               <Text className="text-lg font-pregular text-gray-100 mb-3">
-                Videos mới nhất
+                Ảnh mới nhất
               </Text>
 
-              <Trending posts={lastestPosts ?? []} />
+              <ImageCard posts={imagesData ?? []} />
             </View>
+
+
+            <Text className="text-lg font-pregular text-gray-100 ">
+              Video mới nhất
+            </Text>
           </View>
         )}
         ListEmptyComponent={() => (
