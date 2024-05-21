@@ -61,7 +61,7 @@ const ImageItem = ({ activeItem, item }) => {
         <TouchableOpacity onPress={handlePress}>
           <Image
             source={{ uri: item.image, priority: 'high' }}
-            resizeMode="cover"
+            resizeMode="contain"
             blurRadius={activeItem === item.$id ? 0 : 10}
             className="w-52 h-72 rounded-[33px] mt-3 bg-white/10"
             indicator={renderLoading}

@@ -2,7 +2,7 @@ import { router } from "expo-router";
 
 import FormField from "../../components/FormFieldUpload"
 import { icons } from "../../constants";
-import { createVideoPost, createImagePost} from "../../service/appwrite";
+import { createVideoPost, createImagePost } from "../../service/appwrite";
 
 import { Camera } from 'expo-camera';
 import React, { useState, useRef, useEffect } from 'react';
@@ -16,6 +16,9 @@ import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
 
 import { useGlobalContext } from "../../context/GlobalProvider";
+import IconButton from "../../components/IconButton";
+import CircleButton from "../../components/CircleButton";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 const MAX_RECORDING_DURATION = 4; // Giới hạn thời gian quay 5 giây
 
@@ -26,7 +29,7 @@ const Home = () => {
   const [form, setForm] = useState({
     title: "",
     video: null,
-    thumbnail: {"name": "test.jpg", "size": 120000, "type": "image/jpeg", "uri": "https://picsum.photos/400/300"}, //"https://picsum.photos/400/300"
+    thumbnail: { "name": "test.jpg", "size": 120000, "type": "image/jpeg", "uri": "https://picsum.photos/400/300" }, //"https://picsum.photos/400/300"
     prompt: "My promt...",
   });
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -61,7 +64,7 @@ const Home = () => {
       setForm({
         title: "",
         video: null,
-        thumbnail: {"name": "thumbnail_random_picscum.jpg", "size": 174000, "type": "image/jpeg", "uri": "https://picsum.photos/400/300"},
+        thumbnail: { "name": "thumbnail_random_picscum.jpg", "size": 174000, "type": "image/jpeg", "uri": "https://picsum.photos/400/300" },
         prompt: "My promt...",
       });
 
@@ -242,7 +245,7 @@ const Home = () => {
     //   console.log("Thumbnail Height:", height);
     //   form.thumbnail["size"] = width *height
     //   form.thumbnail["mimeType"] = "image/jpeg"
-    
+
     //   // You can now use width and height in your component
     // }, (error) => {
     //   console.error("Error loading thumbnail:", error);
@@ -368,34 +371,14 @@ const Home = () => {
 
 
             <View style={styles.buttonContainer}>
-              <TouchableOpacity style={styles.iconButton} onPress={toggleFlash}>
-                <Image
-                  source={flash === 'on' ? icons.flash_on : icons.flash}
-                  resizeMode="contain"
-                  style={styles.icon}
-                />
-              </TouchableOpacity>
+              <IconButton icon={(flash=="on")?"flash-on":"flash-off"} label={(flash=="on")?"Flash On":"Flash Off"} onPress={toggleFlash} />
+              <View style={{ marginHorizontal: 60 }} className="w-[84] h-[84] border-4 border-[#ffd33d] rounded-[42px] p-[3px]">
+                <TouchableOpacity className="flex-1 justify-center items-center rounded-[42px] bg-white" disabled={isRecording} onPressIn={handlePressIn} onPressOut={handlePressOut}>
+                  <MaterialIcons name="add" size={38} color="#25292e" />
+                </TouchableOpacity>
+              </View>
+              <IconButton icon="cameraswitch" label="Switch" onPress={toggleCameraFacing} />
 
-              <TouchableOpacity
-                style={[styles.captureButton, isRecording && styles.disabledButton]} // Disable khi đang chụp
-                disabled={isRecording} // Vô hiệu hóa nút khi đang chụp ảnh
-                onPressIn={handlePressIn}
-                onPressOut={handlePressOut}
-              >
-                <Image
-                  source={icons.camera} // Chỉ sử dụng icon camera
-                  resizeMode="contain"
-                  style={styles.icon}
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.iconButton} onPress={toggleCameraFacing}>
-                <Image
-                  source={icons.flip}
-                  resizeMode="contain"
-                  style={styles.icon}
-                />
-              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -407,7 +390,7 @@ const Home = () => {
               <View className="w-full justify-center h-full">
                 <View className="rounded-xl border-2 border-yellow-500 overflow-hidden">
                   <View>
-                  <Image source={{ uri: capturedPhoto.uri }} style={{ width: width, height: width * 4 / 3 }} />
+                    <Image source={{ uri: capturedPhoto.uri }} style={{ width: width, height: width * 4 / 3 }} />
 
                     <FormField
                       title=""
@@ -422,31 +405,9 @@ const Home = () => {
                 </View>
 
                 <View style={styles.buttonContainer}>
-                  <TouchableOpacity onPress={retakePicture}>
-                    <Text style={styles.closeButtonText}>X</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.sendButton, isCapturing]} // Disable khi đang chụp
-                    disabled={isCapturing} // Vô hiệu hóa nút khi đang chụp ảnh
-                    onPress={submitImage}
-                  // onPressIn={recordVideo}
-                  // onPressOut={stopRecording}
-                  >
-                    <Image
-                      source={icons.send} // Chỉ sử dụng icon send
-                      resizeMode="contain"
-                      style={styles.iconSend}
-                    />
-                  </TouchableOpacity>
-
-                  <TouchableOpacity onPress={savePicture}>
-                    <Image
-                      source={icons.share}
-                      resizeMode="contain"
-                      style={[styles.icon, styles.rotatedIcon]}
-                    />
-                  </TouchableOpacity>
+                  <IconButton icon="refresh" label="Rest" onPress={retakePicture} />
+                  <CircleButton onPress={submitImage} icon="send"/>
+                  <IconButton icon="save-alt" label="Save" onPress={savePicture} />
                 </View>
 
 
@@ -455,7 +416,7 @@ const Home = () => {
 
             {video &&
               (
-                <View className="w-full justify-center h-full bg-primary">
+                <View className="w-full justify-center h-full bg-black-100">
                   <View>
                     <Video
                       source={{ uri: video.uri }}
@@ -482,30 +443,11 @@ const Home = () => {
                   </View>
 
                   <View style={styles.buttonContainer}>
-                    <TouchableOpacity onPress={reRecording}>
-                      <Text style={styles.closeButtonText}>X</Text>
-                    </TouchableOpacity>
 
-                    <TouchableOpacity
-                      style={[styles.sendButton, isRecording]} // Disable khi đang chụp
-                      onPress={submit}
-                    // onPressIn={recordVideo}
-                    // onPressOut={stopRecording}
-                    >
-                      <Image
-                        source={icons.send} // Chỉ sử dụng icon send
-                        resizeMode="contain"
-                        style={styles.iconSend}
-                      />
-                    </TouchableOpacity>
 
-                    <TouchableOpacity onPress={saveVideo}>
-                      <Image
-                        source={icons.share}
-                        resizeMode="contain"
-                        style={[styles.icon, styles.rotatedIcon]}
-                      />
-                    </TouchableOpacity>
+                    <IconButton icon="refresh" label="Rest" onPress={reRecording} />
+                  <CircleButton onPress={submit} icon="send"/>
+                  <IconButton icon="save-alt" label="Save" onPress={saveVideo} />
                   </View>
 
 
