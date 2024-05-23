@@ -9,6 +9,7 @@ import { useGlobalContext } from '../../context/GlobalProvider'
 import { icons } from '../../constants'
 import InfoBox from '../../components/InfoBox'
 import { router } from 'expo-router'
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 const Profile = () => {
   const { setIsLogged, user, setUser } = useGlobalContext()
@@ -48,28 +49,18 @@ const Profile = () => {
             creator={item.creator.username}
             avatar={item.creator.avatar}
             fromUser={true}
-            docId ={item.$id}
+            docId={item.$id}
             time={item.$createdAt}
             onDeleteImageChange={handleDeleteImageChange}
           />
         )}
         ListHeaderComponent={() => (
           <View className="w-full flex justify-center items-center mt-6 mb-12 px-4">
-            <TouchableOpacity
-              onPress={logout}
-              className="flex w-full items-end mb-10"
-            >
-              <Image
-                source={icons.logout}
-                resizeMode="contain"
-                className="w-6 h-6"
-              />
-            </TouchableOpacity>
 
-            <View className="w-16 h-16 border border-secondary rounded-lg flex justify-center items-center">
+            <View className="mt-5 w-20 h-20 border border-secondary rounded-[46px] flex justify-center items-center">
               <Image
                 source={{ uri: user?.avatar }}
-                className="w-[90%] h-[90%] rounded-lg"
+                className="w-[90%] h-[90%] rounded-[46px]"
                 resizeMode="cover"
               />
             </View>
@@ -83,16 +74,40 @@ const Profile = () => {
             <View className="mt-5 flex flex-row">
               <InfoBox
                 title={posts.length || 0}
-                subtitle="Posts"
+                subtitle="Bài đăng"
                 titleStyles="text-xl"
                 containerStyles="mr-10"
               />
               <InfoBox
                 title="0"
-                subtitle="Friends"
+                subtitle="Bạn bè"
                 titleStyles="text-xl"
               />
             </View>
+
+            <View className="w-full mt-5 flex flex-row">
+              <View className="flex flex-row">
+                <MaterialIcons name={"error"} size={28} color="grey" />
+                <InfoBox
+                  title="Vùng nguy hiểm"
+                  titleStyles="text-lg font-pregular"
+                  containerStyles="mr-10"
+                />
+              </View>
+            </View>
+
+
+            <TouchableOpacity
+              onPress={logout}
+              className="flex w-full items-start"
+            >
+              <Image
+                source={icons.logout}
+                resizeMode="contain"
+                className="w-6 h-6"
+              />
+            </TouchableOpacity>
+
           </View>
         )}
         ListEmptyComponent={() => (

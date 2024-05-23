@@ -5,7 +5,7 @@
     "slug": "blinket",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/images/logo-small.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
@@ -21,11 +21,12 @@
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Allow $(Blinket) to access your photos.",
         "NSPhotoLibraryAddUsageDescription": "Allow $(Blinket) to save photos."
-      }
+      },
+      "bundleIdentifier": "com.blinket.blinket"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/images/logo-small.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.blinket.blinket",
@@ -64,8 +65,9 @@
         "origin": false
       },
       "eas": {
-        "projectId": "d8632def-592e-4c3f-8abe-a4f746c7520c"
+        "projectId": "5bf88eed-b7ba-4a9b-bb87-3d586e1b025e"
       }
-    }
+    },
+    "owner": "devpham"
   }
 }

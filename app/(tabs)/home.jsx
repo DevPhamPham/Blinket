@@ -232,6 +232,9 @@ const Home = () => {
 
   let recordVideo = async () => {
     setIsRecording(true);
+    if (flash){
+      setFlash("torch");
+    }
     let options = {
       quality: "4:3",
       maxDuration: MAX_RECORDING_DURATION,
@@ -274,6 +277,7 @@ const Home = () => {
       });
       console.log(form);
       setIsRecording(false);
+      setFlash("off");
     });
 
 
