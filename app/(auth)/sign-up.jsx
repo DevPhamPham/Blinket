@@ -80,7 +80,7 @@ const SignUp = () => {
           <CustomButton
             title="Đăng ký"
             handlePress={submit}
-            containerStyles="mt-7 bg-primary-300 text-black"
+            containerStyles="mt-7 bg-primary-300 text-black-0"
             isLoading={isSubmitting}
           />
 
