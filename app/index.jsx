@@ -48,7 +48,7 @@ export default function App() {
           <CustomButton 
             title="Bắt đầu với Email"
             handlePress={() => router.push('/sign-in')}
-            containerStyles="w-full mt-7 bg-primary-300 text-black-0"
+            containerStyles="w-full mt-7 bg-primary-300"
           />
         </View>
       </ScrollView>

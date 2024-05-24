@@ -59,6 +59,15 @@
           "isAccessMediaLocationEnabled": true
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "b3f7e055-32e1-40ba-bee2-926269533391"
+      }
+    },
+    "owner": "devpham"
   }
 }
