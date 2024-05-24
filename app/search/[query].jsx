@@ -18,7 +18,7 @@ const Search = () => {
 
 
   return (
-    <SafeAreaView className="bg-primary h-full">
+    <SafeAreaView className="bg-black-100 h-full">
       <FlatList
         data={posts}
         keyExtractor={(item) => item.$id}
