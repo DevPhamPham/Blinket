@@ -11,7 +11,7 @@ import { useLocalSearchParams } from 'expo-router'
 const Search = () => {
   const { query } = useLocalSearchParams()
   const { data: posts, refetch } = useAppwrite(() => searchPosts(query))
-
+// console.log(posts)
   useEffect(() => {
     refetch()
   }, [query])
@@ -29,6 +29,7 @@ const Search = () => {
             video={item.video}
             creator={item.creator.username}
             avatar={item.creator.avatar}
+            time={item.$createdAt}
           />
         )}
         ListHeaderComponent={() => (
